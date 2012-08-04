@@ -2,7 +2,7 @@
   "author": "bradleymeck <bradley.meck@gmail.com>",
   "name": "understudy",
   "description": "action interceptor for dynamic extensible systems",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "lib/index.js",
   "dependencies": {},
   "devDependencies": {},
