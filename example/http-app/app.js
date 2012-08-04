@@ -8,27 +8,28 @@ var request = require('request');
 //
 // SSO integration example
 //
-app.during('http.authorization', function (req, res, next) {
+app.before('http.authorization', function (req, res, next) {
    request({
       url: 'https://api.nodejitsu.com/auth',
       headers: req.headers
-   }, function (err, res) {
-      if (res.statusCode === 200) {
-         next(req.headers.authorization);
+   }, function (err, sso_res) {
+      if (sso_res.statusCode === 200) {
+         req.authorization = req.headers.authorization;
       }
-      else {
-         next();
-      }
+      next(req, res);
    });
+});
+app.after('http.authorization', function (req, res, next) {
+   if (!req.authorized) {
+      console.log('unauthorized', req.url, 'from', req.connection.remoteAddress);
+   }
+   next();
 });
 
 app.use(flatiron.plugins.http);
 function auth(next) {
-   var req = this.req;
-   var res = this.res;
-   app.perform('http.authorization', req, res, function (authorization) {
-      if (authorization) {
-         req.authorization = authorization;
+   app.perform('http.authorization', this.req, this.res, function (req, res, cleanup) {
+      if (req.authorization) {
          next();
       }
       else {
@@ -39,11 +40,12 @@ function auth(next) {
          else {
             res.json(403);
          }
+         cleanup(req, res);
       }
    });
 }
 app.router.every.before = auth;
-app.router.get('/auth', function () {
+app.router.get('/auth', function (req, res) {
    this.res.json(200, req.authorization);
 })
 

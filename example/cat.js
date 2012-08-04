@@ -22,7 +22,7 @@ process.stdin.on('data', buffer)
 //
 // Interceptor that makes a delay if told to by data
 //
-interpretter.during('data', function (data, next) {
+interpretter.before('data', function (data, next) {
   var shouldwait = (data + '').match(/^wait (\d+(?:\.\d+)?|(\.\d+))$/i);
   //
   // See if we should wait
@@ -48,7 +48,10 @@ process.stdin.on('end', function () {
   //
   // Arguments are passed into final callback via postpone()'s result
   //
-  interpretter.perform('data', data, console.log);
+  interpretter.perform('data', data, function () {
+    var callback = arguments[arguments.length - 1];
+    console.log.apply(console, Array.prototype.slice.call(arguments, 0, -1));
+  });
 });
 
 //
