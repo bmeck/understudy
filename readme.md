@@ -4,10 +4,13 @@ A means to provide interceptors when performing actions.
 
 ## Design Considerations
 
- * Modify input not output from functions
- ** modification of output can lead to a function giving odd results that do not match documentation
- ** use of callback arguments to pass information removes focus on return values to mitigate this potentially odd behavior
- * Opt-in behavior.
+* Modify input not output from functions
+ 
+* * modification of output can lead to a function giving odd results that do not match documentation
+
+* * use of callback arguments to pass information removes focus on return values to mitigate this potentially odd behavior
+ 
+* Opt-in behavior.
 
 ## Usage
 
