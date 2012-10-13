@@ -14,7 +14,7 @@ sso.init = function (done) {
          if (sso_res.statusCode === 200) {
             req.authorization = req.headers.authorization;
          }
-         next(req, res);
+         next(null, req, res);
       });
    });
    app.after('http.authorization', function (req, res, next) {

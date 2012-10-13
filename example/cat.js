@@ -48,7 +48,7 @@ process.stdin.on('end', function () {
   //
   // Arguments are passed into final callback via postpone()'s result
   //
-  interpretter.perform('data', data, function () {
+  interpretter.perform('data', data, function (err) {
     var callback = arguments[arguments.length - 1];
     console.log.apply(console, Array.prototype.slice.call(arguments, 0, -1));
   });

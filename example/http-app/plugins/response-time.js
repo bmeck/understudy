@@ -10,7 +10,7 @@ rtt.init = function (done) {
       res.on('end', function () {
          app.log.info(['responded in', Date.now() - start, 'ms'].join(' '));
       });
-      next(req, res);
+      next(null, req, res);
    });
    done();
 }

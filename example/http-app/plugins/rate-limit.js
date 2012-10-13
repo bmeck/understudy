@@ -22,7 +22,7 @@ rate.init = function (done) {
          }
       }
       client.mtime = now;
-      next(req, res);
+      next(null, req, res);
    });
    setInterval(function () {
       var pruned = 0;

@@ -16,15 +16,15 @@ app.use(require('./pluggable'));
 
 app.use(flatiron.plugins.http);
 function workflow(next) {
-   app.perform('http.request', this.req, this.res, function (req, res, cleanup) {
+   app.perform('http.request', this.req, this.res, function (err, req, res, cleanup) {
       res.on('end', cleanup.bind(null, req, res));
       function handle() {
-         app.perform('http.handler', req, res, function (req, res, cleanup) {
+         app.perform('http.handler', req, res, function (err, req, res, cleanup) {
             next();
             cleanup(req, res);
          });
       }
-      app.perform('http.authorization', req, res, function (req, res, cleanup) {
+      app.perform('http.authorization', req, res, function (err, req, res, cleanup) {
          if (req.authorization) {
             handle();
          }
