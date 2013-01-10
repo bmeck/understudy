@@ -10,7 +10,7 @@ rate.init = function (done) {
    var clients = {};
    this.before('http.handler', function (req, res, next) {
       if (req.authorization) {
-         next(req, res);
+         next(null, req, res);
          return;
       }
       var client = clients[req.connection.remoteAddress] || (clients[req.connection.remoteAddress] = {});

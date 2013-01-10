@@ -12,16 +12,10 @@ sso.init = function (done) {
          headers: req.headers
       }, function (err, sso_res) {
          if (sso_res.statusCode === 200) {
-            req.authorization = req.headers.authorization;
+            req.authorization = req.headers.authorization
          }
          next(null, req, res);
       });
-   });
-   app.after('http.authorization', function (req, res, next) {
-      if (!req.authorized) {
-         console.log('unauthorized request to:', req.url, 'from:', req.connection.remoteAddress);
-      }
-      next();
    });
    done();
 }

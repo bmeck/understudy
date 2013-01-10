@@ -36,11 +36,11 @@ interpretter.before('data', function (data, next) {
       //
       // Pass in our new arguments
       //
-      next('I waited for', wait, 'seconds');
+      next(null, 'I waited for', wait, 'seconds');
     }, wait * 1000);
   }
   else {
-    next();
+    next(null);
   }
 });
 
@@ -48,9 +48,8 @@ process.stdin.on('end', function () {
   //
   // Arguments are passed into final callback via postpone()'s result
   //
-  interpretter.perform('data', data, function (err) {
-    var callback = arguments[arguments.length - 1];
-    console.log.apply(console, Array.prototype.slice.call(arguments, 0, -1));
+  interpretter.perform('data', data, function (err, msg) {
+    console.log.apply(console, Array.prototype.slice.call(arguments, 1, -1));
   });
 });
 
