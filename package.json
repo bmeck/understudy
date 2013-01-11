@@ -5,6 +5,7 @@
   "tags": ["buzzwords"],
   "version": "1.1.0",
   "main": "lib/index.js",
+  "repository": {"type":"git", "url":"git@github.com:bmeck/node-understudy"},
   "dependencies": {},
   "devDependencies": {},
   "optionalDependencies": {},

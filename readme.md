@@ -33,12 +33,11 @@ function afterHandler(config, next) {
 }
 actor.before('load:plugins', beforeHandler);
 actor.after('load:plugins', afterHandler);
-actor.perform('load:plugins', config, function (err, config, allowAfter) {
+actor.perform('load:plugins', config, function (err, config) {
   // start up app
   // ...
-  // opt-in for `after` interceptors
+  // when this function returns if there is not an err, invoke the `after` functions with the arguments
   actor.before.remove('load:plugins', beforeHandler);
-  allowAfter();
 });
 ```
 
@@ -68,8 +67,8 @@ actor.perform('load:plugins', config, function (err, config, allowAfter) {
 2. At the end of the arguments to the event will be added a `next` function.
 2. 1. The `next` function is used for passing state via arguments and accepts an error first argument in order to fail fast.
 3. Each before interceptors will be fired in order after the previous fires the `next` function.
-4. After all interceptors have been fired the `done` function will fire with the arguments passed to the next function and an opt-in function to allow after interceptors.
-5. If the `done` function opts-in to after interceptors the after interceptors will be fired in order after the previous fires the `next` function.
+4. After all interceptors have been fired the `done` function will fire with the arguments passed to the next function.
+5. If the `done` function did not have an error argument the after interceptors will be fired in order after the previous fires the `next` function.
 
 ## Examples
 
