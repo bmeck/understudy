@@ -11,11 +11,11 @@ A means to provide interceptors when performing actions.
 * * fail fast
 
 * Modify input not output from functions
- 
+
 * * modification of output can lead to a function giving odd results that do not match documentation
 
 * * use of callback arguments to pass information removes focus on return values to mitigate this potentially odd behavior
- 
+
 * Opt-in behavior.
 
 ## Usage
@@ -33,11 +33,18 @@ function afterHandler(config, next) {
 }
 actor.before('load:plugins', beforeHandler);
 actor.after('load:plugins', afterHandler);
-actor.perform('load:plugins', config, function (err, config) {
+actor.perform('load:plugins', config, function (config, next) {
   // start up app
   // ...
-  // when this function returns if there is not an err, invoke the `after` functions with the arguments
-  actor.before.remove('load:plugins', beforeHandler);
+  // Config is loaded
+  // ...
+  // Do some other async thing
+  // ...
+  // These arguments are passed to the after hooks unless short-circuited by an
+  // error here
+  next(null, config)
+}, function (err) {
+  // Handle all errors and continue!
 });
 ```
 
@@ -47,19 +54,17 @@ actor.perform('load:plugins', config, function (err, config) {
 
 `interceptor` - function to fire during action
 
-### before.remove/after.remove(action, interceptor) arguments
 
-`action` - name of the action
-
-`interceptor` - function to remove from list of action handlers 
-
-### perform(action, ...args, done) arguments
+### perform(action, ...args, performFn, onFinish) arguments
 
 `action` - name of the action
 
 `...args` - any arguments to send
 
-`done` - callback to fire once all deferences have finished
+`performFn` - function to fire once all before deferences have finished
+
+`onFinish` - functon to fire once all after deferences have finished
+
 
 ### action started
 
@@ -67,8 +72,9 @@ actor.perform('load:plugins', config, function (err, config) {
 2. At the end of the arguments to the event will be added a `next` function.
 2. 1. The `next` function is used for passing state via arguments and accepts an error first argument in order to fail fast.
 3. Each before interceptors will be fired in order after the previous fires the `next` function.
-4. After all interceptors have been fired the `done` function will fire with the arguments passed to the next function.
-5. If the `done` function did not have an error argument the after interceptors will be fired in order after the previous fires the `next` function.
+4. After all interceptors have been fired the `peformFn` function will fire with the arguments passed to the next function.
+4. 1. The `next` function found in the `performFn` is used to pass arguments and needs to be called before the after hooks execute
+5. If no errors have been passed, the after interceptors are executed which pre-empt the execution of the final `onFinish` callback
 
 ## Examples
 
