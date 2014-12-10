@@ -3,7 +3,7 @@
   "name": "understudy",
   "description": "action interceptor for dynamic extensible systems",
   "tags": ["hooks", "before", "after", "flow control"],
-  "version": "2.0.0",
+  "version": "3.0.0",
   "main": "index.js",
   "repository": {"type":"git", "url":"git@github.com:bmeck/node-understudy"},
   "dependencies": {},
