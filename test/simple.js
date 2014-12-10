@@ -17,8 +17,11 @@ actor.after('simple-test', common.mustCall(function afterActionLast(next) {
    assert.equal(arguments.length, 1);
    next();
 }, 1));
-actor.perform('simple-test', 'FIRST', 'SECOND', common.mustCall(function defaultAction(err, b) {
+actor.perform('simple-test', 'FIRST', 'SECOND', common.mustCall(function defaultAction(b, next) {
    assert.equal(b, 'SECOND');
    assert.equal(arguments.length, 2);
+   assert.equal(typeof next, 'function');
+   next(null, b);
+}, 1), common.mustCall(function onFinish(err) {
    assert.equal(err, null);
 }, 1));
