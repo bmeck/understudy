@@ -42,7 +42,7 @@ function perform(action /* , args..., performFn, onFinish*/) {
   if (typeof action !== 'string') throw new Error('event must be a string');
   var onFinish = arguments[arguments.length - 1];
   var performFn = arguments[arguments.length - 2];
-  if (typeof performFn !== 'function' && typeof onFinish !== 'function') {
+  if (typeof performFn !== 'function' || typeof onFinish !== 'function') {
     throw new Error('performFn and onFinish must be a function');
   }
 
