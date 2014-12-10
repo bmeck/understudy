@@ -3,14 +3,12 @@ var common = require('./util/common.js');
 var Understudy = require('../').Understudy;
 
 var actor = new Understudy();
-actor.perform('simple-test', 'FIRST', 'SECOND', common.mustCall(function defaultAction(a, b, next) {
-   assert.equal(a, 'FIRST');
-   assert.equal(b, 'SECOND');
-   assert.equal(arguments.length, 3);
+actor.perform('simple-test', 'FIRST', 'SECOND', common.mustCall(function defaultAction(next) {
+   assert.equal(arguments.length, 1);
    assert.equal(typeof next, 'function');
-   next(null, a, b);
-}, 1), common.mustCall(function onFinish (err, a, b) {
+   next(null, 'THIRD', 'FOURTH');
+}, 1), common.mustCall(function onFinish (err, c, d) {
    assert.equal(err, null);
-   assert.equal(a, 'FIRST');
-   assert.equal(b, 'SECOND');
+   assert.equal(c, 'THIRD');
+   assert.equal(d, 'FOURTH');
 }, 1));

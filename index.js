@@ -38,12 +38,12 @@ function registrar(property) {
   }
 }
 
-function perform(action /* , args..., performFn, onFinish*/) {
+function perform(action /* , args..., performFn, callback*/) {
   if (typeof action !== 'string') throw new Error('event must be a string');
-  var onFinish = arguments[arguments.length - 1];
+  var callback = arguments[arguments.length - 1];
   var performFn = arguments[arguments.length - 2];
-  if (typeof performFn !== 'function' || typeof onFinish !== 'function') {
-    throw new Error('performFn and onFinish must be a function');
+  if (typeof performFn !== 'function' || typeof callback !== 'function') {
+    throw new Error('performFn and callback must be a function');
   }
 
   //
@@ -72,10 +72,6 @@ function perform(action /* , args..., performFn, onFinish*/) {
     }
 
     function nextInterceptor() {
-      if (arguments[0]) {
-         i = len;
-      }
-
       if (i === len) {
         i++;
         after.apply(self, arguments);
@@ -83,39 +79,53 @@ function perform(action /* , args..., performFn, onFinish*/) {
       else if (i < len) {
         var used = false;
         var interceptor = interceptors[i++];
-        interceptor.apply(self, Array.prototype.slice.call(arguments, 1).concat(function next() {
+        interceptor.apply(self, Array.prototype.slice.call(arguments, 1).concat(function next(err) {
           //
           // Do not allow multiple continuations
           //
-          if (used) return;
+          if (used) { return; }
+
           used = true;
-          nextInterceptor.apply(null, arguments);
+          if (!err) {
+            nextInterceptor.apply(null, args);
+          } else {
+            after.call(self, err);
+          }
         }));
       }
     }
-    nextInterceptor.apply(self, args);
+    nextInterceptor.apply(null, args);
   }
 
   //
   // Remark (jcrugzz): Is this the most optimized way to do this?
   //
-  function finish(err) {
+  function executePerform(err) {
     var self = this;
     if (err) {
-      onFinish.apply(this, arguments);
+      callback.call(this, err);
     } else {
-      var args = Array.prototype.slice.call(arguments, 1);
-      args.push(function afterPerform(err) {
+      //
+      // Remark (indexzero): Should we console.warn if `arguments.length > 1` here?
+      //
+      performFn.call(this, function afterPerform(err) {
+        var performArgs;
         if (err) {
-          onFinish.apply(self, arguments);
+          callback.call(self, err);
         } else {
-          iterate(self, self._after_interceptors && self._after_interceptors[action], arguments, onFinish);
+          performArgs = Array.prototype.slice.call(arguments);
+          iterate(self, self._after_interceptors && self._after_interceptors[action], args, function (err) {
+            if (err) {
+              callback.call(self, err);
+            } else {
+              callback.apply(self, performArgs);
+            }
+          });
         }
-      });
-      performFn.apply(this, args)
+      })
     }
   }
 
-  iterate(this, this._before_interceptors && this._before_interceptors[action], args, finish);
+  iterate(this, this._before_interceptors && this._before_interceptors[action], args, executePerform);
   return this;
 }
