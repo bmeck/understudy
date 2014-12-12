@@ -47,19 +47,19 @@ function perform(action /* , args..., performFn, callback*/) {
   }
 
   //
-  // Get "arguments" Array and set first to null to indicate
-  // to nextInterceptor that there is no error.
+  // Get "arguments" Array and drop the first since that
+  // is the action which is not needed in the hooks.
   //
-  var args = Array.prototype.slice.call(arguments, 0, -2);
-  args[0] = null;
+  var args = Array.prototype.slice.call(arguments, 1, -2);
 
   //
   // This is called in multiple temporal localities, put into a function instead of inline
   // minor speed loss for more maintainability
   //
-  function iterate(self, interceptors, args, after) {
+  function iterate(interceptors, args, after) {
+    args = args.slice();
     if (!interceptors) {
-      after.apply(self, args);
+      after.apply(null, args);
       return;
     }
 
@@ -67,34 +67,30 @@ function perform(action /* , args..., performFn, callback*/) {
     var i = 0;
     var len = interceptors.length;
     if (!len) {
-      after.apply(self, args);
+      after.apply(null, args);
       return;
     }
 
     function nextInterceptor() {
       if (i === len) {
         i++;
-        after.apply(self, arguments);
+        after.apply(null, args);
       }
       else if (i < len) {
-        var used = false;
         var interceptor = interceptors[i++];
-        interceptor.apply(self, Array.prototype.slice.call(arguments, 1).concat(function next(err) {
-          //
-          // Do not allow multiple continuations
-          //
-          if (used) { return; }
-
-          used = true;
-          if (!err) {
-            nextInterceptor.apply(null, args);
-          } else {
-            after.call(self, err);
-          }
-        }));
+        interceptor.apply(null, args);
       }
     }
-    nextInterceptor.apply(null, args);
+
+    args.push(function next(err) {
+      if (!err) {
+        nextInterceptor();
+      } else {
+        after(err);
+      }
+    });
+
+    nextInterceptor();
   }
 
   //
@@ -103,22 +99,22 @@ function perform(action /* , args..., performFn, callback*/) {
   function executePerform(err) {
     var self = this;
     if (err) {
-      callback.call(this, err);
+      callback(err);
     } else {
       //
       // Remark (indexzero): Should we console.warn if `arguments.length > 1` here?
       //
-      performFn.call(this, function afterPerform(err) {
+      performFn(function afterPerform(err) {
         var performArgs;
         if (err) {
-          callback.call(self, err);
+          callback(err);
         } else {
           performArgs = Array.prototype.slice.call(arguments);
-          iterate(self, self._after_interceptors && self._after_interceptors[action], args, function (err) {
+          iterate(self._after_interceptors && self._after_interceptors[action], args, function (err) {
             if (err) {
-              callback.call(self, err);
+              callback(err);
             } else {
-              callback.apply(self, performArgs);
+              callback.apply(null, performArgs);
             }
           });
         }
@@ -126,6 +122,6 @@ function perform(action /* , args..., performFn, callback*/) {
     }
   }
 
-  iterate(this, this._before_interceptors && this._before_interceptors[action], args, executePerform);
+  iterate(this._before_interceptors && this._before_interceptors[action], args, executePerform);
   return this;
 }
