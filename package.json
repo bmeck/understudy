@@ -2,12 +2,22 @@
   "author": "bradleymeck <bradley.meck@gmail.com>",
   "name": "understudy",
   "description": "action interceptor for dynamic extensible systems",
-  "tags": ["hooks", "before", "after", "flow control"],
+  "tags": [
+    "hooks",
+    "before",
+    "after",
+    "flow control"
+  ],
   "version": "3.0.0",
   "main": "index.js",
-  "repository": {"type":"git", "url":"git@github.com:bmeck/node-understudy"},
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:bmeck/node-understudy"
+  },
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "accounting": "~0.4.1"
+  },
   "optionalDependencies": {},
   "scripts": {
     "test": "for SCRIPT in test/*.js; do echo Testing $SCRIPT; node $SCRIPT; done"
