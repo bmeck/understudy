@@ -16,7 +16,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "accounting": "~0.4.1"
+    "accounting": "~0.4.1",
+    "benchmark": "~1.0.0",
+    "microtime": "~1.0.1"
   },
   "optionalDependencies": {},
   "scripts": {

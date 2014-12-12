@@ -1,14 +1,12 @@
-var Understudy = require('../');
+var Understudy = require('..');
 var accounting = require('accounting');
 
-var LEN = 1e7;
-
-function ops_per_sec(s) {
-  return accounting.format(LEN / format(s));
+function ops_per_sec(ops, s) {
+  return (ops / format(s));
 }
 
 function format(s) {
-  return ((s[0] * 1e3 + s[1] / 1e6) / 1e3).toFixed(2);
+  return ((s[0] * 1e3 + s[1] / 1e6) / 1e3);
 }
 
 var hooks = {
@@ -71,9 +69,17 @@ function testThing(thing, key, n, next) {
   function checkDone() {
     completed++;
     if (completed === n) {
-      var end = process.hrtime(start);
-      console.log(' completed in %ss, op/s %s', format(end), ops_per_sec(end));
-      next();
+      var end = process.hrtime(start),
+          elapsed = format(end);
+          opsPerSec = ops_per_sec(n, end);
+
+      console.log(
+        ' completed in %ss, op/s %s',
+        elapsed.toFixed(2),
+        accounting.format(opsPerSec)
+      );
+
+      next({ elapsed: elapsed, opsPerSec: opsPerSec });
     }
   }
 
@@ -88,14 +94,23 @@ function compareThing(n) {
     yesHooks: new YesHooks()
   };
 
-  testThing(tests.noHooks, 'noHooks', n, function () {
-    testThing(tests.yesHooks, 'yesHooks', n, function () {
+  testThing(tests.noHooks, 'noHooks', n, function (noRes) {
+    testThing(tests.yesHooks, 'yesHooks', n, function (yesRes) {
+      console.log('noHooks is %s times faster', (noRes.opsPerSec / yesRes.opsPerSec).toFixed(2));
+
       console.log('Done!');
     });
   });
 }
 
+// console.log('Running benchmarks in silent mode to warmup jit');
+// var log = console.log;
+// console.log = function () {}
+// compareThing(1000000);
+// compareThing(100000);
+
+// console.log = log;
+// console.log('Not silent anymore...');
+
 compareThing(1000000);
 compareThing(100000);
-compareThing(10000);
-compareThing(1000);
