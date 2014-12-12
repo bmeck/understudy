@@ -38,57 +38,47 @@ function registrar(property) {
   }
 }
 
-function perform(action /* , args..., performFn, callback*/) {
-  if (typeof action !== 'string') throw new Error('event must be a string');
-  var callback = arguments[arguments.length - 1];
-  var performFn = arguments[arguments.length - 2];
-  if (typeof performFn !== 'function' || typeof callback !== 'function') {
+function perform(action, options, performFn, callback) {
+  if (typeof action !== 'string') {
+    throw new Error('event must be a string');
+  } else if (typeof performFn !== 'function' || typeof callback !== 'function') {
     throw new Error('performFn and callback must be a function');
   }
-
-  //
-  // Get "arguments" Array and drop the first since that
-  // is the action which is not needed in the hooks.
-  //
-  var args = Array.prototype.slice.call(arguments, 1, -2);
 
   //
   // This is called in multiple temporal localities, put into a function instead of inline
   // minor speed loss for more maintainability
   //
-  function iterate(interceptors, args, after) {
-    args = args.slice();
+  function iterate(interceptors, after) {
     if (!interceptors) {
-      after.apply(null, args);
-      return;
+      return void after();
     }
 
     interceptors = interceptors.concat();
     var i = 0;
     var len = interceptors.length;
     if (!len) {
-      after.apply(null, args);
-      return;
+      return void after();
     }
 
-    function nextInterceptor() {
-      if (i === len) {
-        i++;
-        after.apply(null, args);
-      }
-      else if (i < len) {
-        var interceptor = interceptors[i++];
-        interceptor.apply(null, args);
-      }
-    }
-
-    args.push(function next(err) {
+    function onNext(err) {
       if (!err) {
         nextInterceptor();
       } else {
         after(err);
       }
-    });
+    }
+
+    function nextInterceptor() {
+      if (i === len) {
+        i++;
+        after();
+      }
+      else if (i < len) {
+        var interceptor = interceptors[i++];
+        interceptor(options, onNext);
+      }
+    }
 
     nextInterceptor();
   }
@@ -110,7 +100,7 @@ function perform(action /* , args..., performFn, callback*/) {
           callback(err);
         } else {
           performArgs = Array.prototype.slice.call(arguments);
-          iterate(self._after_interceptors && self._after_interceptors[action], args, function (err) {
+          iterate(self._after_interceptors && self._after_interceptors[action], function (err) {
             if (err) {
               callback(err);
             } else {
@@ -122,6 +112,6 @@ function perform(action /* , args..., performFn, callback*/) {
     }
   }
 
-  iterate(this._before_interceptors && this._before_interceptors[action], args, executePerform);
+  iterate(this._before_interceptors && this._before_interceptors[action], executePerform);
   return this;
 }
