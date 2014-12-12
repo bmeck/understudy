@@ -96,9 +96,10 @@ function compareThing(n) {
 
   testThing(tests.noHooks, 'noHooks', n, function (noRes) {
     testThing(tests.yesHooks, 'yesHooks', n, function (yesRes) {
-      console.log('noHooks is %s times faster', (noRes.opsPerSec / yesRes.opsPerSec).toFixed(2));
-
-      console.log('Done!');
+      console.log(
+        'noHooks is %s times faster \n Done \n',
+        (noRes.opsPerSec / yesRes.opsPerSec).toFixed(2)
+      );
     });
   });
 }
