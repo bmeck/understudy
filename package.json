@@ -12,7 +12,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git@github.com:bmeck/node-understudy"
+    "url": "git@github.com:bmeck/understudy"
   },
   "dependencies": {},
   "devDependencies": {
