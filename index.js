@@ -42,15 +42,22 @@ function perform(action /* , args..., performFn, callback*/) {
   if (typeof action !== 'string') throw new Error('event must be a string');
   var callback = arguments[arguments.length - 1];
   var performFn = arguments[arguments.length - 2];
-  if (typeof performFn !== 'function' || typeof callback !== 'function') {
-    throw new Error('performFn and callback must be a function');
+  var slice = -2;
+  if (typeof performFn !== 'function') {
+    if (typeof callback !== 'function') {
+      throw new Error('performFn and callback must be a function');
+    }
+
+    performFn = callback;
+    callback = null;
+    slice = -1;
   }
 
   //
   // Get "arguments" Array and set first to null to indicate
   // to nextInterceptor that there is no error.
   //
-  var args = Array.prototype.slice.call(arguments, 0, -2);
+  var args = Array.prototype.slice.call(arguments, 0, slice);
   args[0] = null;
 
   //
@@ -109,6 +116,8 @@ function perform(action /* , args..., performFn, callback*/) {
       // Remark (indexzero): Should we console.warn if `arguments.length > 1` here?
       //
       performFn.call(this, function afterPerform(err) {
+        if (!callback) { return; }
+
         var performArgs;
         if (err) {
           callback.call(self, err);
