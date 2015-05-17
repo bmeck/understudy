@@ -19,7 +19,7 @@ A means to provide interceptors (i.e. hooks) when performing asynchronous action
 ## Usage
 
 ``` js
-var Understudy = require('..');
+var Understudy = require('understudy');
 
 var App = module.exports = function App() {
   Understudy.call(this);
