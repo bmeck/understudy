@@ -110,23 +110,24 @@ function perform(action /* , args..., performFn, callback*/) {
   function executePerform(err) {
     var self = this;
     if (err) {
-      callback.call(this, err);
+      if (callback) return callback.call(this, err);
+      throw err;
     } else {
       //
       // Remark (indexzero): Should we console.warn if `arguments.length > 1` here?
       //
       performFn.call(this, function afterPerform(err) {
-        if (!callback) { return; }
-
         var performArgs;
         if (err) {
-          callback.call(self, err);
+          if (callback) return callback.call(self, err);
+          throw err;
         } else {
           performArgs = Array.prototype.slice.call(arguments);
           iterate(self, self._after_interceptors && self._after_interceptors[action], args, function (err) {
             if (err) {
-              callback.call(self, err);
-            } else {
+              if (callback) return callback.call(self, err);
+              throw err;
+            } else if (callback) {
               callback.apply(self, performArgs);
             }
           });
