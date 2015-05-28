@@ -3,15 +3,27 @@ var common = require('./util/common.js');
 var Understudy = require('../').Understudy;
 
 var actor = new Understudy();
-
-actor.before('no-callback', function (a, b) {
+var assertion = common.mustCall(function (a, b, next) {
   assert.equal(a, b);
+  next();
+}, 2);
+
+actor.before('no-callback', assertion);
+actor.after('no-callback', assertion);
+actor.perform('no-callback', 'EQUAL', 'EQUAL', function (done) {
+  done();
 });
 
-actor.after('no-callback', function (a, b) {
+actor.before('no-callback-error', common.mustCall(function (a, b, next) {
   assert.equal(a, b);
-});
+  next('ERROR');
+}, 1));
 
-actor.perform('no-functions', 'EQUAL', 'EQUAL', function (done) {
+actor.after('no-callback-error', common.mustCall(function (a, b, next) {
+  assert.equal(a, b);
+  next('ERROR');
+}, 1));
+
+actor.perform('no-callback-error', 'EQUAL', 'EQUAL', function (done) {
   done();
 });
