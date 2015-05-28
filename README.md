@@ -2,24 +2,48 @@
 
 A means to provide interceptors (i.e. hooks) when performing asynchronous actions.
 
-## Goals
-
 * **All hooks are asynchronous**
 * * All logic done by `perform`-based actions is asynchronous.
 * * Error first helpers.
 * * Fail fast.
-
 * **Consistency in arguments provided to hooks & actions**
 * * Hooks can only mutate arguments that they are passed, not the number of arguments.
 * * Use of callback arguments to pass information removes focus on return values to mitigate this potentially odd behavior.
-
 * **Opt-in behavior.**
 * * Only calls to `.perform(action ...` enable hooking.
 
-## Usage
+![](assets/flow.png)
+
+By depending on `understudy` you are exposed to three methods: `perform`, `before` and `after`.
+
+#### `.perform(action, arg0, /* arg1, ... */, work, callback)`
+
+This is the core API for invoking hooks provided by `Understudy`. Each call to `perform` for the same `action` should have a consistent argument signature because this is what will be expected by each of the before and after hooks for the `action`. The overall flow control is:
+
+1. Call all `before` hooks for `action`.
+2. Call `work` function for `action`.
+3. Call all `after hooks for `action`.
+4. Call `callback` with results from `work` function.
+
+#### `.before(action, arg0, /* arg1, ... */, next)`
+
+Called before the `work` function is executed in perform with _exactly_ the arguments passed to `.perform`. Nothing passed to `next` have an impact on the flow control above **except any error is supplied short-circuits execution to the callback.**
+
+#### `.after(action, arg0, /* arg1, ... */, next)`
+
+Called after the `work` function is executed in perform with _exactly_ the arguments passed to `.perform`. Nothing passed to `next` have an impact on the flow control above **except any error is supplied short-circuits execution to the callback.**
+
+## Real-world Usage
+
+Let's consider a real-world application with two interceptable actions:
+
+- `start`: Application has started
+- `http:request`: Application has received an incoming HTTP request.
+
+We could easily implement this `App` behavior in `Understudy`:
 
 ``` js
-var Understudy = require('..');
+var Understudy = require('understudy');
 
 var App = module.exports = function App() {
   Understudy.call(this);
@@ -101,7 +125,6 @@ app.start({ port: 8080 }, function () {
   console.log('ok');
 });
 
-
 //
 // Format process.hrtime()
 //
@@ -110,28 +133,15 @@ function format(s) {
 }
 ```
 
-## API Documentation
+## More Examples
 
-#### `.perform(action, arg0, /* arg1, ... */, work, callback)`
+See [the example directory](/example)
 
-This is the core API for invoking hooks provided by `Understudy`. Each call to `perform` for the same `action` should have a consistent argument signature because this is what will be expected by each of the before and after hooks for the `action`. The overall flow control is:
+### Error handling when **no callback is provided**
 
-1. Call all `before` hooks for `action`.
-2. Call `work` function for `action`.
-3. Call all `after hooks for `action`.
-4. Call `callback` with results from `work` function.
+Each `before` and `after` hook can provide an optional error to short-circuit evaluation of the flow that would normally follow it. This error will be provided to your `callback`, when supplied. In the event that you DO NOT provide a `callback` and a `before`, `after` or `work` function responds with an `Error` _IT WILL BE IGNORED AND FLOW WILL CONTINUE._
 
-#### `.before(action, arg0, /* arg1, ... */, next)
-
-Called before the `work` function is executed in perform with _exactly_ the arguments passed to `.perform`. Nothing passed to `next` have an impact on the flow control above **except any error is supplied short-circuits execution to the callback.**
-
-#### `.after(action, arg0, /* arg1, ... */, next)
-
-Called after the `work` function is executed in perform with _exactly_ the arguments passed to `.perform`. Nothing passed to `next` have an impact on the flow control above **except any error is supplied short-circuits execution to the callback.**
-
-## Examples
-
-See the example directory
+In other words: if you do not supply a callback to your `.perform` then `understudy will consider all of your `before`, `after` and `work` functions as **"fire and forget".**
 
 ##### LICENSE: MIT
 ##### Author: [Bradley Meck](https://github.com/bmeck)
