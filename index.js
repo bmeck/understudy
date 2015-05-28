@@ -93,7 +93,7 @@ function perform(action /* , args..., performFn, callback*/) {
           if (used) { return; }
 
           used = true;
-          if (!err) {
+          if (!err || !callback) {
             nextInterceptor.apply(null, args);
           } else {
             after.call(self, err);
@@ -109,24 +109,22 @@ function perform(action /* , args..., performFn, callback*/) {
   //
   function executePerform(err) {
     var self = this;
-    if (err) {
+    if (err && callback) {
       callback.call(this, err);
     } else {
       //
       // Remark (indexzero): Should we console.warn if `arguments.length > 1` here?
       //
       performFn.call(this, function afterPerform(err) {
-        if (!callback) { return; }
-
         var performArgs;
-        if (err) {
+        if (err && callback) {
           callback.call(self, err);
         } else {
           performArgs = Array.prototype.slice.call(arguments);
           iterate(self, self._after_interceptors && self._after_interceptors[action], args, function (err) {
-            if (err) {
+            if (err && callback) {
               callback.call(self, err);
-            } else {
+            } else if (callback) {
               callback.apply(self, performArgs);
             }
           });
