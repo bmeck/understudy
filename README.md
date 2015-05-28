@@ -141,7 +141,7 @@ See [the example directory](/example)
 
 Each `before` and `after` hook can provide an optional error to short-circuit evaluation of the flow that would normally follow it. This error will be provided to your `callback`, when supplied. In the event that you DO NOT provide a `callback` and a `before`, `after` or `work` function responds with an `Error` _IT WILL BE IGNORED AND FLOW WILL CONTINUE._
 
-In other words: if you do not supply a callback to your `.perform` then `understudy will consider all of your `before`, `after` and `work` functions as **"fire and forget".**
+In other words: if you do not supply a callback to your `.perform` then `understudy` will consider all of your `before`, `after` and `work` functions as **"fire and forget".**
 
 ##### LICENSE: MIT
 ##### Author: [Bradley Meck](https://github.com/bmeck)
