@@ -152,7 +152,7 @@ actor.before('always', function (next) {
 actor.after('always', function (next) {
   console.log('I always get called. NO MATTER WHAT');
   console.log('BUT, only when no callback is supplied.');
-  next(new Error('I always fail'));
+  next(new Error('Another swallowed error'));
 });
 
 actor.perform('always', function (done) {
