@@ -139,9 +139,28 @@ See [the example directory](/example)
 
 ### Error handling when **no callback is provided**
 
-Each `before` and `after` hook can provide an optional error to short-circuit evaluation of the flow that would normally follow it. This error will be provided to your `callback`, when supplied. In the event that you DO NOT provide a `callback` and a `before`, `after` or `work` function responds with an `Error` _IT WILL BE IGNORED AND FLOW WILL CONTINUE._
+Each `before` and `after` hook can provide an optional error to short-circuit evaluation of the flow that would normally follow it. This error will be provided to your `callback`, when supplied. In the event that you DO NOT provide a `callback` and a `before`, `after` or `work` function responds with an `Error` _IT WILL BE IGNORED AND FLOW WILL CONTINUE._ e.g.
 
-In other words: if you do not supply a callback to your `.perform` then `understudy` will consider all of your `before`, `after` and `work` functions as **"fire and forget".**
+``` js
+var Understudy = require('understudy');
+var actor = new Understudy();
+
+actor.before('always', function (next) {
+  next(new Error('I always fail'));
+});
+
+actor.after('always', function (next) {
+  console.log('I always get called. NO MATTER WHAT');
+  console.log('BUT, only when no callback is supplied.');
+  next(new Error('I always fail'));
+});
+
+actor.perform('always', function (done) {
+  done(new Error('Errors are ignored here too.'));
+});
+```
+
+In other words (as in the above example): if you do not supply a callback to your `.perform` then `understudy` will consider all of your `before`, `after` and `work` functions as **"fire and forget".**
 
 ##### LICENSE: MIT
 ##### Author: [Bradley Meck](https://github.com/bmeck)
