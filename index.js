@@ -17,10 +17,13 @@ function Understudy() {
   this.before = registrar('_before_interceptors');
   this._before_interceptors = null;
   this._after_interceptors = null;
+  this._interceptor_registrar = registrar;
   return this;
 }
 
-function registrar(property) {
+function registrar(property, fn) {
+  fn = fn || 'push';
+
   return function (action, callback) {
     if (typeof action !== 'string') {
       throw new Error('event must be a string');
@@ -32,7 +35,7 @@ function registrar(property) {
     var interceptors = this[property][action]
       = this[property][action] || [];
 
-    interceptors.push(callback);
+    interceptors[fn](callback);
     return this;
   };
 }
