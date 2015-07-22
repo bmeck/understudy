@@ -22,20 +22,19 @@ function Understudy() {
 
 function registrar(property) {
   return function (action, callback) {
-    if (typeof action === 'string') {
-      if (typeof callback === 'function') {
-        this[property] || (this[property] = {});
-        this[property][action] || (this[property][action] = []);
-        var interceptors = this[property][action];
-        interceptors[interceptors.length] = callback;
-        return this;
-      }
-      else {
-        throw new Error('callback must be a function');
-      }
+    if (typeof action !== 'string') {
+      throw new Error('event must be a string');
+    } else if (typeof callback !== 'function') {
+      throw new Error('callback must be a function');
     }
-    throw new Error('event must be a string');
-  }
+
+    this[property] = this[property] || {};
+    var interceptors = this[property][action]
+      = this[property][action] || [];
+
+    interceptors.push(callback);
+    return this;
+  };
 }
 
 function perform(action /* , args..., performFn, callback*/) {
