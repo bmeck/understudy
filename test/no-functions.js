@@ -5,13 +5,17 @@ var Understudy = require('../').Understudy;
 var actor = new Understudy();
 
 actor.before('no-functions', function () {
-  assert.equal(true, false);
-});
-
-actor.after('no-functions', function () {
-  assert.equal(true, false);
+  throw new Error('before shouldn\'t be reached');
 });
 
 assert.throws(function () {
-  actor.perform('no-functions', 'NO', 'AFTER');
+  actor.perform('no-functions', 'INVALID ACTION', 'INVALID CALLBACK');
+}, function (err) {
+  return err.message == 'last argument must be a function';
+});
+
+assert.throws(function () {
+  actor.perform('no-functions', function () {}, 'INVALID CALLBACK');
+}, function (err) {
+  return err.message == 'last argument must be a function';
 });
