@@ -42,12 +42,13 @@ function perform(action /* , args..., performFn, callback*/) {
   if (typeof action !== 'string') throw new Error('event must be a string');
   var callback = arguments[arguments.length - 1];
   var performFn = arguments[arguments.length - 2];
+  if (typeof callback !== 'function') {
+    throw new Error('last argument must be a function');
+  }
+
+  // Allow callback to be omitted by using last arg as performFn
   var slice = -2;
   if (typeof performFn !== 'function') {
-    if (typeof callback !== 'function') {
-      throw new Error('performFn and callback must be a function');
-    }
-
     performFn = callback;
     callback = null;
     slice = -1;
