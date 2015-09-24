@@ -64,7 +64,7 @@ function perform(action /* , args..., performFn, callback*/) {
   // This is called in multiple temporal localities, put into a function instead of inline
   // minor speed loss for more maintainability
   //
-  function iterate(self, interceptors, args, after) {
+  function iterate(self, interceptors, args, isAfter, after) {
     if (!interceptors) {
       after.apply(self, args);
       return;
@@ -94,7 +94,7 @@ function perform(action /* , args..., performFn, callback*/) {
 
           used = true;
           if (!err || !callback) {
-            nextInterceptor.apply(null, args);
+            nextInterceptor.apply(null, isAfter ? arguments : args);
           } else {
             after.call(self, err);
           }
@@ -116,23 +116,44 @@ function perform(action /* , args..., performFn, callback*/) {
       // Remark (indexzero): Should we console.warn if `arguments.length > 1` here?
       //
       performFn.call(this, function afterPerform(err) {
-        var performArgs;
+        var performArgs, afterArgs;
         if (err && callback) {
           callback.call(self, err);
         } else {
+
+          //
+          // Specifically for the `after` hooks, we call it with the result of
+          // the perform function to be able to do any modifications to the
+          // result of the work! We splice off the error here
+          //
           performArgs = Array.prototype.slice.call(arguments);
-          iterate(self, self._after_interceptors && self._after_interceptors[action], args, function (err) {
+          //
+          // We pass a boolean value here to indicate we are executing after
+          // hooks which have slightly different semantics
+          //
+          iterate(self, self._after_interceptors && self._after_interceptors[action], performArgs, true, function (err) {
             if (err && callback) {
               callback.call(self, err);
             } else if (callback) {
-              callback.apply(self, performArgs);
-            }
+              //
+              // Just to be sure we dont get javascript mad with object
+              // references, we check the length of the arguments to see if
+              // there is one, if not we default to whatever the performArgs.
+              // Remark: I want to note here that each c
+              //
+              return arguments.length > 1
+                ? callback.apply(self, arguments)
+                : callback.apply(self, performArgs);
+              }
           });
         }
       })
     }
   }
 
-  iterate(this, this._before_interceptors && this._before_interceptors[action], args, executePerform);
+  //
+  // Special flag for `isAfter`
+  //
+  iterate(this, this._before_interceptors && this._before_interceptors[action], args, false, executePerform);
   return this;
 }
