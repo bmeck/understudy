@@ -11,15 +11,15 @@ actor.before('simple-test', common.mustCall(function beforeAction(a, b, next) {
 }, 1));
 
 actor.after('simple-test', common.mustCall(function afterAction(a, b, next) {
-  assert.equal(a, 'FIRST');
-  assert.equal(b, 'SECOND');
+  assert.equal(a, 'ARG1');
+  assert.equal(b, 'ARG2');
   assert.equal(arguments.length, 3);
-  next();
+  next(null, 'NARG1', 'NARG2');
 }, 1));
 
 actor.after('simple-test', common.mustCall(function afterActionLast(a, b, next) {
-  assert.equal(a, 'FIRST');
-  assert.equal(b, 'SECOND');
+  assert.equal(a, 'NARG1');
+  assert.equal(b, 'NARG2');
   assert.equal(arguments.length, 3);
   next();
 }, 1));

@@ -9,7 +9,10 @@ actor.before('error-after', common.mustCall(function beforeAction(a, next) {
 }, 1));
 
 actor.after('error-after', common.mustCall(function afterAction(a, next) {
-  assert.equal(a, 'FIRST');
+  //
+  // We get whats returned from perform here
+  //
+  assert.equal(a, 'RESULT');
   next('ERROR');
 }, 1));
 
@@ -19,7 +22,7 @@ actor.perform(
   'error-after', 'FIRST',
   common.mustCall(function perform (next) {
     assert(typeof next, 'function');
-    next();
+    next(null, 'RESULT');
   }, 1),
   common.mustCall(function onFinish (err) {
     assert.equal(err, 'ERROR');
