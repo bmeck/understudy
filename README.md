@@ -14,7 +14,7 @@ A means to provide interceptors (i.e. hooks) when performing asynchronous action
 
 ![](assets/flow.png)
 
-By depending on `understudy` you are exposed to four methods: `perform`, `before`, `after`
+By depending on `understudy` you are exposed to four methods: `perform`, `before`, `after` and `waterfall`
 
 #### `.perform(action, arg0, /* arg1, ... */, work, callback)`
 
