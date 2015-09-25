@@ -14,7 +14,7 @@ A means to provide interceptors (i.e. hooks) when performing asynchronous action
 
 ![](assets/flow.png)
 
-By depending on `understudy` you are exposed to three methods: `perform`, `before` and `after`.
+By depending on `understudy` you are exposed to four methods: `perform`, `before`, `after`
 
 #### `.perform(action, arg0, /* arg1, ... */, work, callback)`
 
@@ -31,7 +31,29 @@ Called before the `work` function is executed in perform with _exactly_ the argu
 
 #### `.after(action, arg0, /* arg1, ... */, next)`
 
-Called after the `work` function is executed in perform with _exactly_ the arguments passed to `.perform`. Nothing passed to `next` have an impact on the flow control above **except any error is supplied short-circuits execution to the callback.**
+Called after the `work` function is executed in perform with _exactly_ the
+arguments passed to `.perform`. Nothing passed to `next` have an impact on the
+flow control above **except any error is supplied short-circuits execution to
+the callback.** 
+
+While the above statement is true when using `.perform`, `after` hooks acquire a
+`waterfall` like behavior with `.waterfall` where the result of work function
+gets passed to the `after` hooks. Each after hook is then able to mutate the
+arguments passed to the next one. Strongly discouraged to change number of
+arguments for your user's sanity.
+
+#### `.waterfall(action, arg0, /* arg1, ... */, work, callback)`
+
+This is a slightly different `perform` that is very useful for when you have to
+modify state received from a function in a sequence of configurable hooks.
+
+1. Call all `before` hooks for `action`.
+2. Call `work` function for `action`.
+3. Call all `after hooks for `action` with the result returned from the `work`
+   function.
+4. Call `callback` with results from the `after` hooks execution (if any) and
+   otherwise the results from the `work` function.
+
 
 ## Real-world Usage
 

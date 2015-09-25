@@ -12,7 +12,8 @@ module.exports = Understudy;
 module.exports.Understudy = Understudy;
 
 function Understudy() {
-  this.perform = perform;
+  this.perform = performer(false);
+  this.waterfall = performer(true);
   this.after = registrar('_after_interceptors');
   this.before = registrar('_before_interceptors');
   this._before_interceptors = null;
@@ -38,122 +39,126 @@ function registrar(property) {
   }
 }
 
-function perform(action /* , args..., performFn, callback*/) {
-  if (typeof action !== 'string') throw new Error('event must be a string');
-  var callback = arguments[arguments.length - 1];
-  var performFn = arguments[arguments.length - 2];
-  var slice = -2;
-  if (typeof performFn !== 'function') {
-    if (typeof callback !== 'function') {
-      throw new Error('performFn and callback must be a function');
-    }
 
-    performFn = callback;
-    callback = null;
-    slice = -1;
-  }
+function performer(waterfall) {
+  return function perform(action /* , args..., performFn, callback*/) {
 
-  //
-  // Get "arguments" Array and set first to null to indicate
-  // to nextInterceptor that there is no error.
-  //
-  var args = Array.prototype.slice.call(arguments, 0, slice);
-  args[0] = null;
-
-  //
-  // This is called in multiple temporal localities, put into a function instead of inline
-  // minor speed loss for more maintainability
-  //
-  function iterate(self, interceptors, args, isAfter, after) {
-    if (!interceptors) {
-      after.apply(self, args);
-      return;
-    }
-
-    interceptors = interceptors.concat();
-    var i = 0;
-    var len = interceptors.length;
-    if (!len) {
-      after.apply(self, args);
-      return;
-    }
-
-    function nextInterceptor() {
-      if (i === len) {
-        i++;
-        after.apply(self, arguments);
+    if (typeof action !== 'string') throw new Error('event must be a string');
+    var callback = arguments[arguments.length - 1];
+    var performFn = arguments[arguments.length - 2];
+    var slice = -2;
+    if (typeof performFn !== 'function') {
+      if (typeof callback !== 'function') {
+        throw new Error('performFn and callback must be a function');
       }
-      else if (i < len) {
-        var used = false;
-        var interceptor = interceptors[i++];
-        interceptor.apply(self, Array.prototype.slice.call(arguments, 1).concat(function next(err) {
-          //
-          // Do not allow multiple continuations
-          //
-          if (used) { return; }
 
-          used = true;
-          if (!err || !callback) {
-            nextInterceptor.apply(null, isAfter ? arguments : args);
-          } else {
-            after.call(self, err);
-          }
-        }));
-      }
+      performFn = callback;
+      callback = null;
+      slice = -1;
     }
-    nextInterceptor.apply(null, args);
-  }
 
-  //
-  // Remark (jcrugzz): Is this the most optimized way to do this?
-  //
-  function executePerform(err) {
-    var self = this;
-    if (err && callback) {
-      callback.call(this, err);
-    } else {
-      //
-      // Remark (indexzero): Should we console.warn if `arguments.length > 1` here?
-      //
-      performFn.call(this, function afterPerform(err) {
-        var performArgs, afterArgs;
-        if (err && callback) {
-          callback.call(self, err);
-        } else {
+    //
+    // Get "arguments" Array and set first to null to indicate
+    // to nextInterceptor that there is no error.
+    //
+    var args = Array.prototype.slice.call(arguments, 0, slice);
+    args[0] = null;
 
-          //
-          // Specifically for the `after` hooks, we call it with the result of
-          // the perform function to be able to do any modifications to the
-          // result of the work! We splice off the error here
-          //
-          performArgs = Array.prototype.slice.call(arguments);
-          //
-          // We pass a boolean value here to indicate we are executing after
-          // hooks which have slightly different semantics
-          //
-          iterate(self, self._after_interceptors && self._after_interceptors[action], performArgs, true, function (err) {
-            if (err && callback) {
-              callback.call(self, err);
-            } else if (callback) {
-              //
-              // Just to be sure we dont get javascript mad with object
-              // references, we check the length of the arguments to see if
-              // there is one, if not we default to whatever the performArgs.
-              // Remark: I want to note here that each c
-              //
-              return arguments.length > 1
-                ? callback.apply(self, arguments)
-                : callback.apply(self, performArgs);
-              }
-          });
+    //
+    // This is called in multiple temporal localities, put into a function instead of inline
+    // minor speed loss for more maintainability
+    //
+    function iterate(self, interceptors, args, after) {
+      if (!interceptors) {
+        after.apply(self, args);
+        return;
+      }
+
+      interceptors = interceptors.concat();
+      var i = 0;
+      var len = interceptors.length;
+      if (!len) {
+        after.apply(self, args);
+        return;
+      }
+
+      function nextInterceptor() {
+        if (i === len) {
+          i++;
+          after.apply(self, arguments);
         }
-      })
-    }
-  }
+        else if (i < len) {
+          var used = false;
+          var interceptor = interceptors[i++];
+          interceptor.apply(self, Array.prototype.slice.call(arguments, 1).concat(function next(err) {
+            //
+            // Do not allow multiple continuations
+            //
+            if (used) { return; }
 
-  //
-  // Special flag for `isAfter`
-  //
-  iterate(this, this._before_interceptors && this._before_interceptors[action], args, false, executePerform);
-  return this;
+            used = true;
+            if (!err || !callback) {
+              nextInterceptor.apply(null, waterfall ? arguments : args);
+            } else {
+              after.call(self, err);
+            }
+          }));
+        }
+      }
+      nextInterceptor.apply(null, args);
+    }
+
+    //
+    // Remark (jcrugzz): Is this the most optimized way to do this?
+    //
+    function executePerform(err) {
+      var self = this;
+      if (err && callback) {
+        callback.call(this, err);
+      } else {
+        //
+        // Remark (indexzero): Should we console.warn if `arguments.length > 1` here?
+        //
+        performFn.call(this, function afterPerform(err) {
+          var performArgs, afterArgs;
+          if (err && callback) {
+            callback.call(self, err);
+          } else {
+
+            //
+            // Specifically for the `after` hooks, we call it with the result of
+            // the perform function to be able to do any modifications to the
+            // result of the work!
+            //
+            performArgs = Array.prototype.slice.call(arguments);
+            //
+            // If we are waterfalling we need to pass the performArgs
+            //
+            afterArgs = waterfall ? performArgs : args;
+            iterate(self, self._after_interceptors && self._after_interceptors[action], afterArgs, function (err) {
+              if (err && callback) {
+                callback.call(self, err);
+              } else if (callback) {
+                //
+                // Just to be sure we dont get javascript mad with object
+                // references, we check the length of the arguments to see if
+                // there is one, if not we default to whatever the performArgs.
+                // Remark: I want to note here that each c
+                //
+                return arguments.length > 1 && waterfall
+                  ? callback.apply(self, arguments)
+                  : callback.apply(self, performArgs);
+                }
+            });
+          }
+        })
+      }
+    }
+
+    //
+    // Special flag for `isAfter`
+    //
+    iterate(this, this._before_interceptors && this._before_interceptors[action], args, executePerform);
+    return this;
+  }
 }
