@@ -6,15 +6,12 @@ var actor = new Understudy();
 var assertion = common.mustCall(function (a, b, next) {
   assert.equal(a, b);
   next();
-}, 1);
+}, 2);
 
 actor.before('no-callback', assertion);
-actor.after('no-callback', common.mustCall(function (a, next) {
-  assert.equal(a, 'LOL');
-  next()
-}, 1));
+actor.after('no-callback', assertion);
 actor.perform('no-callback', 'EQUAL', 'EQUAL', function (done) {
-  done(null, 'LOL');
+  done();
 });
 
 actor.before('no-callback-error', common.mustCall(function (a, b, next) {
@@ -22,11 +19,11 @@ actor.before('no-callback-error', common.mustCall(function (a, b, next) {
   next('ERROR');
 }, 1));
 
-actor.after('no-callback-error', common.mustCall(function (res, next) {
-  assert.equal(res, 'RESULT');
+actor.after('no-callback-error', common.mustCall(function (a, b, next) {
+  assert.equal(a, b);
   next('ERROR');
 }, 1));
 
 actor.perform('no-callback-error', 'EQUAL', 'EQUAL', function (done) {
-  done(null, 'RESULT');
+  done();
 });
