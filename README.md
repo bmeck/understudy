@@ -49,7 +49,7 @@ modify state received from a function in a sequence of configurable hooks.
 
 1. Call all `before` hooks for `action`.
 2. Call `work` function for `action`.
-3. Call all `after hooks for `action` with the result returned from the `work`
+3. Call all `after` hooks for `action` with the result returned from the `work`
    function.
 4. Call `callback` with results from the `after` hooks execution (if any) and
    otherwise the results from the `work` function.
