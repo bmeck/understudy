@@ -24,6 +24,13 @@ actor.after('simple-test', common.mustCall(function afterActionLast(a, b, next) 
   next();
 }, 1));
 
+actor.after('*', common.mustCall(function afterActionLast(a, b, next) {
+  assert.equal(a, 'FIRST');
+  assert.equal(b, 'SECOND');
+  assert.equal(arguments.length, 3);
+  next();
+}, 1));
+
 actor.perform(
   'simple-test', 'FIRST', 'SECOND',
   common.mustCall(function defaultAction(next) {

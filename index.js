@@ -25,7 +25,7 @@ function registrar(property) {
   return function (action, callback) {
     if (typeof action === 'string') {
       if (typeof callback === 'function') {
-        this[property] || (this[property] = {});
+        this[property] || (this[property] = { '*': [] });
         this[property][action] || (this[property][action] = []);
         var interceptors = this[property][action];
         interceptors[interceptors.length] = callback;
@@ -69,12 +69,11 @@ function performer(waterfall) {
     // minor speed loss for more maintainability
     //
     function iterate(self, interceptors, args, after) {
-      if (!interceptors) {
+      if (!interceptors || !interceptors.length) {
         after.apply(self, args);
         return;
       }
 
-      interceptors = interceptors.concat();
       var i = 0;
       var len = interceptors.length;
       if (!len) {
@@ -135,7 +134,7 @@ function performer(waterfall) {
             // If we are waterfalling we need to pass the performArgs
             //
             afterArgs = waterfall ? performArgs : args;
-            iterate(self, self._after_interceptors && self._after_interceptors[action], afterArgs, function (err) {
+            iterate(self, self._after_interceptors && self._after_interceptors['*'].concat(self._after_interceptors[action]), afterArgs, function (err) {
               if (err && callback) {
                 callback.call(self, err);
               } else if (callback) {
@@ -158,7 +157,7 @@ function performer(waterfall) {
     //
     // Special flag for `isAfter`
     //
-    iterate(this, this._before_interceptors && this._before_interceptors[action], args, executePerform);
+    iterate(this, this._before_interceptors && this._before_interceptors['*'].concat(this._before_interceptors[action]), args, executePerform);
     return this;
   }
 }
